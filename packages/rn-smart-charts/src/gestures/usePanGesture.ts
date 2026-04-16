@@ -7,7 +7,8 @@ interface Args {
   xEnd: SharedValue<number>;
   panStartXStart: SharedValue<number>;
   panStartXEnd: SharedValue<number>;
-  plotW: number;
+  /** Plot width in px — read on the UI thread inside the gesture. */
+  plotW: SharedValue<number>;
   dataMinX: number;
   dataMaxX: number;
 }
@@ -32,7 +33,7 @@ export function usePanGesture({
     .onUpdate((e) => {
       'worklet';
       const span = panStartXEnd.value - panStartXStart.value;
-      const dxData = (-e.translationX * span) / Math.max(1, plotW);
+      const dxData = (-e.translationX * span) / Math.max(1, plotW.value);
       let s = panStartXStart.value + dxData;
       let en = panStartXEnd.value + dxData;
       // Hard clamp at data edges (no rubber band).
@@ -50,7 +51,7 @@ export function usePanGesture({
     .onEnd((e) => {
       'worklet';
       const span = xEnd.value - xStart.value;
-      const velocityData = (-e.velocityX * span) / Math.max(1, plotW);
+      const velocityData = (-e.velocityX * span) / Math.max(1, plotW.value);
       xStart.value = withDecay({
         velocity: velocityData,
         clamp: [dataMinX, dataMaxX - span],

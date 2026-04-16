@@ -45,9 +45,13 @@ export function YAxis({ yAxis, yMin, yMax, plot }: Props) {
 
   const font = matchFont({ fontFamily: 'sans-serif', fontSize });
 
-  const [tickList, setTickList] = useState<TickEntry[]>(() =>
-    computeTicks(yAxis, yMin.value, yMax.value),
-  );
+  // Empty on first render to avoid reading .value during render.
+  const [tickList, setTickList] = useState<TickEntry[]>([]);
+
+  // Wrapper invoked on the JS thread — `computeTicks` is not a worklet.
+  const recomputeOnJS = (lo: number, hi: number) => {
+    setTickList(computeTicks(yAxis, lo, hi));
+  };
 
   useAnimatedReaction(
     () => ({ lo: yMin.value, hi: yMax.value }),
@@ -59,10 +63,11 @@ export function YAxis({ yAxis, yMin, yMax, plot }: Props) {
       ) {
         return;
       }
-      runOnJS(setTickList)(computeTicks(yAxis, curr.lo, curr.hi));
+      runOnJS(recomputeOnJS)(curr.lo, curr.hi);
     },
   );
 
+  // Initial population + recompute on axis-config change (useEffect runs post-render).
   useEffect(() => {
     setTickList(computeTicks(yAxis, yMin.value, yMax.value));
   }, [yAxis, yMin, yMax]);

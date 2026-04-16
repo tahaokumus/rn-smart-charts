@@ -13,15 +13,12 @@ interface Args {
 }
 
 export function useComposedChartGesture({ state, option, plotW }: Args): ComposedGesture {
-  // We capture plotW.value at gesture configuration time per call; gestures
-  // need a number, not an SV. We re-create the gesture object below if plotW
-  // changes by reading the latest .value at gesture begin.
   const pan = usePanGesture({
     xStart: state.xStart,
     xEnd: state.xEnd,
     panStartXStart: state.panStartXStart,
     panStartXEnd: state.panStartXEnd,
-    plotW: plotW.value,
+    plotW,
     dataMinX: option.dataMinX,
     dataMaxX: option.dataMaxX,
   });

@@ -56,20 +56,25 @@ export function XAxis({ xAxis, xStart, xEnd, plot }: Props) {
 
   const font = matchFont({ fontFamily: 'sans-serif', fontSize });
 
-  // React state: the tick list. Updated from the UI thread when window changes.
-  const [tickList, setTickList] = useState<TickEntry[]>(() =>
-    computeTicks(xAxis, xStart.value, xEnd.value),
-  );
+  // Tick list as React state. Empty on first render to avoid reading .value during render;
+  // useEffect populates it on mount.
+  const [tickList, setTickList] = useState<TickEntry[]>([]);
+
+  // Wrapper invoked on the JS thread — `computeTicks` is not a worklet.
+  const recomputeOnJS = (s: number, e: number) => {
+    setTickList(computeTicks(xAxis, s, e));
+  };
 
   useAnimatedReaction(
     () => ({ s: xStart.value, e: xEnd.value }),
     (curr, prev) => {
       if (prev && Math.abs(curr.s - prev.s) < 1 && Math.abs(curr.e - prev.e) < 1) return;
-      runOnJS(setTickList)(computeTicks(xAxis, curr.s, curr.e));
+      runOnJS(recomputeOnJS)(curr.s, curr.e);
     },
   );
 
-  // Recompute when axis config / plot changes.
+  // Initial population + recompute when axis config changes. useEffect runs after render
+  // so reading shared-value `.value` here is safe.
   useEffect(() => {
     setTickList(computeTicks(xAxis, xStart.value, xEnd.value));
   }, [xAxis, xStart, xEnd]);
