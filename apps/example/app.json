@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "rn-smart-charts example",
+    "slug": "rn-smart-charts-example",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.rnsmartcharts.example"
+    },
+    "plugins": ["expo-dev-client", "@shopify/react-native-skia/plugin"],
+    "experiments": {
+      "tsconfigPaths": false
+    }
+  }
+}

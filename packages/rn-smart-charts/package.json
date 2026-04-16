@@ -1,0 +1,56 @@
+{
+  "name": "rn-smart-charts",
+  "version": "0.1.0",
+  "description": "React Native Skia chart library with TradingView-style pan/zoom and ECharts-inspired API.",
+  "license": "MIT",
+  "author": "Taha Okumus",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/commonjs/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": ["src", "lib", "!**/__tests__", "!**/*.test.ts", "!**/*.test.tsx"],
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "react-native",
+    "skia",
+    "chart",
+    "area-chart",
+    "echarts",
+    "tradingview",
+    "reanimated",
+    "gesture-handler"
+  ],
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.0",
+    "@shopify/react-native-skia": ">=2.4.0",
+    "react-native-reanimated": ">=3.19.0",
+    "react-native-gesture-handler": ">=2.20.0"
+  },
+  "devDependencies": {
+    "@shopify/react-native-skia": "2.4.4",
+    "@types/react": "19.0.10",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-builder-bob": "0.32.0",
+    "react-native-gesture-handler": "2.22.0",
+    "react-native-reanimated": "3.19.1",
+    "typescript": "5.5.4",
+    "vitest": "2.1.5"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      ["commonjs", { "esm": true }],
+      ["module", { "esm": true }],
+      ["typescript", { "esm": true }]
+    ]
+  }
+}
