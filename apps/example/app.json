@@ -9,7 +9,7 @@
     "android": {
       "package": "com.rnsmartcharts.example"
     },
-    "plugins": ["expo-dev-client", "@shopify/react-native-skia/plugin"],
+    "plugins": ["expo-dev-client"],
     "experiments": {
       "tsconfigPaths": false
     }
