@@ -14,6 +14,8 @@ export interface ChartState {
   // Crosshair / tooltip
   crosshairX: SharedValue<number>;
   crosshairActive: SharedValue<boolean>;
+  // True during an active pan/pinch gesture — skips y-domain smoothing.
+  interacting: SharedValue<boolean>;
   // Pan/pinch scratch (snapshots at gesture begin)
   panStartXStart: SharedValue<number>;
   panStartXEnd: SharedValue<number>;
@@ -36,6 +38,7 @@ export function useChartState(option: NormalizedOption): ChartState {
 
   const crosshairX = useSharedValue(0);
   const crosshairActive = useSharedValue(false);
+  const interacting = useSharedValue(false);
 
   const panStartXStart = useSharedValue(0);
   const panStartXEnd = useSharedValue(0);
@@ -49,6 +52,7 @@ export function useChartState(option: NormalizedOption): ChartState {
     yMaxAnim,
     crosshairX,
     crosshairActive,
+    interacting,
     panStartXStart,
     panStartXEnd,
     pinchStartXStart,

@@ -7,6 +7,7 @@ interface Args {
   xEnd: SharedValue<number>;
   panStartXStart: SharedValue<number>;
   panStartXEnd: SharedValue<number>;
+  interacting: SharedValue<boolean>;
   /** Plot width in px — read on the UI thread inside the gesture. */
   plotW: SharedValue<number>;
   dataMinX: number;
@@ -18,6 +19,7 @@ export function usePanGesture({
   xEnd,
   panStartXStart,
   panStartXEnd,
+  interacting,
   plotW,
   dataMinX,
   dataMaxX,
@@ -29,6 +31,7 @@ export function usePanGesture({
       cancelAnimation(xEnd);
       panStartXStart.value = xStart.value;
       panStartXEnd.value = xEnd.value;
+      interacting.value = true;
     })
     .onUpdate((e) => {
       'worklet';
@@ -62,5 +65,10 @@ export function usePanGesture({
         clamp: [dataMinX + span, dataMaxX],
         deceleration: DEFAULT_DECAY_DECELERATION,
       });
+      interacting.value = false;
+    })
+    .onFinalize(() => {
+      'worklet';
+      interacting.value = false;
     });
 }

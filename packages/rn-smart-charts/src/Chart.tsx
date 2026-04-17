@@ -49,6 +49,7 @@ export const Chart = forwardRef<ChartRef, ChartProps>(function Chart({ option, s
     xEnd: state.xEnd,
     yMinAnim: state.yMinAnim,
     yMaxAnim: state.yMaxAnim,
+    interacting: state.interacting,
     includeZero: normalized.yAxis.scale !== true,
   });
 

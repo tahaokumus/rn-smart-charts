@@ -7,6 +7,7 @@ interface Args {
   xEnd: SharedValue<number>;
   pinchStartXStart: SharedValue<number>;
   pinchStartXEnd: SharedValue<number>;
+  interacting: SharedValue<boolean>;
   minSpan: number;
   maxSpan: number;
   dataMinX: number;
@@ -17,6 +18,7 @@ export function usePinchGesture({
   xEnd,
   pinchStartXStart,
   pinchStartXEnd,
+  interacting,
   minSpan,
   maxSpan,
   dataMinX,
@@ -28,6 +30,7 @@ export function usePinchGesture({
       cancelAnimation(xEnd);
       pinchStartXStart.value = xStart.value;
       pinchStartXEnd.value = xEnd.value;
+      interacting.value = true;
     })
     .onUpdate((e) => {
       'worklet';
@@ -41,5 +44,13 @@ export function usePinchGesture({
       );
       xStart.value = next.xStart;
       xEnd.value = next.xEnd;
+    })
+    .onEnd(() => {
+      'worklet';
+      interacting.value = false;
+    })
+    .onFinalize(() => {
+      'worklet';
+      interacting.value = false;
     });
 }
