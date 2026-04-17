@@ -7,16 +7,25 @@ describe('rightAnchoredPinch', () => {
     expect(r.xEnd).toBe(100);
   });
 
-  it('halves span when scale=2 (zoom in)', () => {
-    const r = rightAnchoredPinch(0, 100, 2, 1, 1000, -1000);
-    expect(r.xStart).toBe(50);
-    expect(r.xEnd - r.xStart).toBe(50);
+  it('scale=1 is a no-op', () => {
+    const r = rightAnchoredPinch(0, 100, 1, 1, 1000, -1000);
+    expect(r.xStart).toBe(0);
+    expect(r.xEnd).toBe(100);
   });
 
-  it('doubles span when scale=0.5 (zoom out)', () => {
+  it('scale>1 shrinks the span (zoom in), gently due to damping', () => {
+    const r = rightAnchoredPinch(0, 100, 2, 1, 1000, -1000);
+    // With PINCH_SENSITIVITY=0.75 → 2^0.75 ≈ 1.68 → span ≈ 59.5
+    const span = r.xEnd - r.xStart;
+    expect(span).toBeLessThan(100);
+    expect(span).toBeGreaterThan(50);
+  });
+
+  it('scale<1 grows the span (zoom out), gently due to damping', () => {
     const r = rightAnchoredPinch(0, 100, 0.5, 1, 1000, -1000);
-    expect(r.xStart).toBe(-100);
-    expect(r.xEnd - r.xStart).toBe(200);
+    const span = r.xEnd - r.xStart;
+    expect(span).toBeGreaterThan(100);
+    expect(span).toBeLessThan(200);
   });
 
   it('clamps to minSpan', () => {

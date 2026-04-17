@@ -25,6 +25,9 @@ export function usePanGesture({
   dataMaxX,
 }: Args) {
   return Gesture.Pan()
+    // Single-finger only — a 2-finger gesture belongs to the pinch.
+    .minPointers(1)
+    .maxPointers(1)
     .onBegin(() => {
       'worklet';
       cancelAnimation(xStart);

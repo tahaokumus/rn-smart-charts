@@ -12,7 +12,7 @@ import {
   DEFAULT_X_TARGET_TICKS,
 } from '../constants';
 import { formatNumberTick } from '../format/numberFormat';
-import { formatTimeTick } from '../format/timeTickFormat';
+import { formatTimeTicksContextual } from '../format/timeTickFormat';
 import { ticks as linearTicks, scale } from '../math/scaleLinear';
 import { timeTicks } from '../math/scaleTime';
 import type { PlotMetrics } from '../types/internal';
@@ -34,11 +34,13 @@ function computeTicks(xAxis: XAxisOption, xStart: number, xEnd: number): TickEnt
   if (xEnd <= xStart) return [];
   if (xAxis.type === 'time') {
     const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
+    // Contextual labels: show higher units only when they change.
+    const contextualLabels = formatTimeTicksContextual(tt);
     return tt.map((t, i) => ({
       value: t.value,
       label: xAxis.axisLabel?.formatter
         ? xAxis.axisLabel.formatter(t.value, i)
-        : formatTimeTick(t.value, t.level),
+        : (contextualLabels[i] ?? ''),
     }));
   }
   const lt = linearTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
