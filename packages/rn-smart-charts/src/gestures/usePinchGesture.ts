@@ -11,6 +11,7 @@ interface Args {
   minSpan: number;
   maxSpan: number;
   dataMinX: number;
+  dataMaxX: number;
 }
 
 export function usePinchGesture({
@@ -22,6 +23,7 @@ export function usePinchGesture({
   minSpan,
   maxSpan,
   dataMinX,
+  dataMaxX,
 }: Args) {
   return Gesture.Pinch()
     .onBegin(() => {
@@ -41,6 +43,7 @@ export function usePinchGesture({
         minSpan,
         maxSpan,
         dataMinX,
+        dataMaxX,
       );
       xStart.value = next.xStart;
       xEnd.value = next.xEnd;

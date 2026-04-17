@@ -33,6 +33,7 @@ export function useComposedChartGesture({ state, option, plotW }: Args): Compose
     minSpan: option.minSpan,
     maxSpan: option.maxSpan,
     dataMinX: option.dataMinX,
+    dataMaxX: option.dataMaxX,
   });
 
   const { crosshairPan } = useLongPressGesture({
