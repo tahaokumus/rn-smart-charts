@@ -47,8 +47,19 @@ export function Crosshair({ series, tooltip, active, pixelX, xStart, xEnd, plot 
   // still animate on the UI thread via shared values.
   const [snapshot, setSnapshot] = useState<TooltipSnapshot>({ text: '', width: 0 });
 
-  const updateOnJS = (snap: TooltipSnapshot) => {
-    setSnapshot(snap);
+  // JS-side helpers — must be declared *before* useAnimatedReaction so the
+  // worklet captures defined references in its closure. Reanimated serializes
+  // the closure at registration time; forward-references resolve to undefined
+  // and produce: "Cannot read property '__remoteFunction' of undefined".
+  const clearSnapshot = () => {
+    setSnapshot({ text: '', width: 0 });
+  };
+
+  const resolveAndSet = (xv: number, yv: number, i: number) => {
+    const params: TooltipParams = { seriesName: series.name, x: xv, y: yv, index: i };
+    const text = tooltip.formatter ? tooltip.formatter(params) : `${yv}`;
+    const width = font ? font.measureText(text).width + 16 : text.length * 8 + 16;
+    setSnapshot({ text, width });
   };
 
   useAnimatedReaction(
@@ -69,7 +80,7 @@ export function Crosshair({ series, tooltip, active, pixelX, xStart, xEnd, plot 
         return;
       }
       if (!curr.active) {
-        runOnJS(updateOnJS)({ text: '', width: 0 });
+        runOnJS(clearSnapshot)();
         return;
       }
       const xScale = {
@@ -81,7 +92,7 @@ export function Crosshair({ series, tooltip, active, pixelX, xStart, xEnd, plot 
       const dataX = invert(xScale, curr.px);
       const i = bisectClosest(series.rawXs, dataX);
       if (i < 0) {
-        runOnJS(updateOnJS)({ text: '', width: 0 });
+        runOnJS(clearSnapshot)();
         return;
       }
       const xv = series.rawXs[i] as number;
@@ -89,14 +100,6 @@ export function Crosshair({ series, tooltip, active, pixelX, xStart, xEnd, plot 
       runOnJS(resolveAndSet)(xv, yv, i);
     },
   );
-
-  // JS-thread helper: applies the user's formatter and measures text width.
-  const resolveAndSet = (xv: number, yv: number, i: number) => {
-    const params: TooltipParams = { seriesName: series.name, x: xv, y: yv, index: i };
-    const text = tooltip.formatter ? tooltip.formatter(params) : `${yv}`;
-    const width = font ? font.measureText(text).width + 16 : text.length * 8 + 16;
-    setSnapshot({ text, width });
-  };
 
   // Animated geometry — driven by pixelX + active on the UI thread.
   const lineP1 = useDerivedValue<SkPoint>(() => vec(pixelX.value, plot.top));
