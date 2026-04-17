@@ -33,15 +33,13 @@ export function useComposedChartGesture({ state, option, plotW }: Args): Compose
     dataMinX: option.dataMinX,
   });
 
-  const { longPress, crosshairPan } = useLongPressGesture({
+  const { crosshairPan } = useLongPressGesture({
     crosshairActive: state.crosshairActive,
     crosshairX: state.crosshairX,
   });
 
-  // Once long-press fires, the crosshairPan takes over; otherwise pan/pinch
-  // run together. We use Race to give long-press priority once it activates.
-  return Gesture.Race(
-    Gesture.Simultaneous(longPress, crosshairPan),
-    Gesture.Simultaneous(pinch, pan),
-  );
+  // The crosshair pan only activates after a 250 ms still-hold. Before that the
+  // normal pan/pinch win the Race, so ordinary panning works. After the hold
+  // fires, `crosshairPan` takes over.
+  return Gesture.Race(crosshairPan, Gesture.Simultaneous(pinch, pan));
 }

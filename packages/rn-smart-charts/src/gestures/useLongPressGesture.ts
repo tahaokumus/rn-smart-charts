@@ -8,17 +8,24 @@ interface Args {
 }
 
 /**
- * Returns two composable gestures:
- *   - `longPress`: activates the crosshair and sets initial pixelX.
- *   - `crosshairPan`: while the crosshair is active, slides crosshairX with the
- *     finger. Has no effect when `crosshairActive` is false.
+ * A single `Gesture.Pan()` that only activates after the user holds the finger
+ * still for `DEFAULT_LONG_PRESS_MS`. Before that threshold, the normal pan/pinch
+ * gestures win the Race, so regular panning isn't blocked.
+ *
+ * Once activated, it sets `crosshairActive=true` and drives `crosshairX` with
+ * the finger position. On release, it clears `crosshairActive`.
  */
 export function useLongPressGesture({ crosshairActive, crosshairX }: Args) {
-  const longPress = Gesture.LongPress()
-    .minDuration(DEFAULT_LONG_PRESS_MS)
+  const crosshairPan = Gesture.Pan()
+    .activateAfterLongPress(DEFAULT_LONG_PRESS_MS)
+    .averageTouches(false)
     .onStart((e) => {
       'worklet';
       crosshairActive.value = true;
+      crosshairX.value = e.x;
+    })
+    .onUpdate((e) => {
+      'worklet';
       crosshairX.value = e.x;
     })
     .onEnd(() => {
@@ -30,17 +37,5 @@ export function useLongPressGesture({ crosshairActive, crosshairX }: Args) {
       crosshairActive.value = false;
     });
 
-  const crosshairPan = Gesture.Pan()
-    .averageTouches(false)
-    .onUpdate((e) => {
-      'worklet';
-      if (!crosshairActive.value) return;
-      crosshairX.value = e.x;
-    })
-    .onEnd(() => {
-      'worklet';
-      crosshairActive.value = false;
-    });
-
-  return { longPress, crosshairPan };
+  return { crosshairPan };
 }
