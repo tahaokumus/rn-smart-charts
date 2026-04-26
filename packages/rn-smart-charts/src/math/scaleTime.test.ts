@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { timeTicks } from './scaleTime';
+import { type TimeTick, timeTicks } from './scaleTime';
 
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
@@ -55,6 +55,45 @@ describe('timeTicks', () => {
     expect(timeTicks(100, 50, 5)).toEqual([]);
     expect(timeTicks(50, 50, 5)).toEqual([]);
     expect(timeTicks(0, 100, 0)).toEqual([]);
+  });
+
+  it('injects month-start ticks at sub-month zooms (weekly)', () => {
+    // ~60 days picks the 7-day step. Without injection, no tick lands on day 1.
+    const start = new Date(2026, 10, 6).getTime(); // Nov 6
+    const end = new Date(2027, 0, 5).getTime(); // Jan 5
+    const ticks = timeTicks(start, end, 8);
+    const monthTicks = ticks.filter((t) => t.level === 'month');
+    expect(monthTicks.length).toBeGreaterThanOrEqual(2);
+    for (const t of monthTicks) {
+      const d = new Date(t.value);
+      expect(d.getDate()).toBe(1);
+    }
+    // All Dec-1 / Jan-1 in range must be present.
+    const monthStarts = monthTicks.map((t) => new Date(t.value).getMonth());
+    expect(monthStarts).toContain(11); // Dec
+    expect(monthStarts).toContain(0); // Jan
+  });
+
+  it('injects month-start ticks at sub-month zooms (daily)', () => {
+    // ~10 days picks the 1-day step.
+    const start = new Date(2026, 1, 27).getTime(); // Feb 27
+    const end = new Date(2026, 2, 8).getTime(); // Mar 8
+    const ticks = timeTicks(start, end, 8);
+    const mar1 = ticks.find((t) => {
+      const d = new Date(t.value);
+      return d.getMonth() === 2 && d.getDate() === 1;
+    });
+    expect(mar1).toBeDefined();
+    expect(mar1?.level).toBe('month');
+  });
+
+  it('produces strictly increasing ticks after month injection', () => {
+    const start = new Date(2026, 10, 6).getTime();
+    const end = new Date(2027, 0, 5).getTime();
+    const ticks = timeTicks(start, end, 8);
+    for (let i = 1; i < ticks.length; i++) {
+      expect((ticks[i] as TimeTick).value).toBeGreaterThan((ticks[i - 1] as TimeTick).value);
+    }
   });
 
   it('all ticks are within domain', () => {

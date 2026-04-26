@@ -65,7 +65,37 @@ export function timeTicks(d0: number, d1: number, targetCount: number): TimeTick
     }
   }
 
-  return alignedTicks(d0, d1, chosen.level, chosen.ms);
+  const base = alignedTicks(d0, d1, chosen.level, chosen.ms);
+
+  // For sub-month zooms, also include every month-start within range so the
+  // month label is always anchored on day-1 regardless of how the auto-step
+  // lands. Dedupe ticks that fall within half a step of each other; prefer
+  // the month tick so the calendar anchor wins.
+  if (chosen.level !== 'day' && chosen.level !== 'hour' && chosen.level !== 'minute' && chosen.level !== 'second') {
+    return base;
+  }
+
+  const months: TimeTick[] = [];
+  let cur = startOfMonth(d0);
+  while (cur < d0) cur = addMonths(cur, 1);
+  while (cur <= d1) {
+    months.push({ value: cur, level: 'month' });
+    cur = addMonths(cur, 1);
+  }
+  if (months.length === 0) return base;
+
+  const merged = [...base, ...months].sort((a, b) => a.value - b.value);
+  const out: TimeTick[] = [];
+  const minGap = chosen.ms * 0.5;
+  for (const t of merged) {
+    const last = out[out.length - 1];
+    if (last && Math.abs(t.value - last.value) < minGap) {
+      if (t.level === 'month') out[out.length - 1] = t;
+      continue;
+    }
+    out.push(t);
+  }
+  return out;
 }
 
 function alignedTicks(d0: number, d1: number, level: TimeLevel, stepMs: number): TimeTick[] {
