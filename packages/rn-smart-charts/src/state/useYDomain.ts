@@ -9,7 +9,7 @@ import { indexRangeFor, yDomainFor } from '../math/viewport';
 import type { NormalizedSeries } from '../types/internal';
 
 interface Args {
-  series: NormalizedSeries;
+  series: NormalizedSeries[];
   xStart: SharedValue<number>;
   xEnd: SharedValue<number>;
   yMinAnim: SharedValue<number>;
@@ -41,9 +41,20 @@ export function useYDomain({
 }: Args) {
   useAnimatedReaction(
     () => {
-      const { i0, i1 } = indexRangeFor(series.xs, xStart.value, xEnd.value);
-      const d = yDomainFor(series.ys, i0, i1, includeZero);
-      return { yMin: d.yMin, yMax: d.yMax, interacting: interacting.value };
+      let yMin = Number.POSITIVE_INFINITY;
+      let yMax = Number.NEGATIVE_INFINITY;
+      for (let s = 0; s < series.length; s++) {
+        const sr = series[s] as NormalizedSeries;
+        const { i0, i1 } = indexRangeFor(sr.xs, xStart.value, xEnd.value);
+        const d = yDomainFor(sr.ys, i0, i1, includeZero);
+        if (d.yMin < yMin) yMin = d.yMin;
+        if (d.yMax > yMax) yMax = d.yMax;
+      }
+      if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
+        yMin = 0;
+        yMax = 1;
+      }
+      return { yMin, yMax, interacting: interacting.value };
     },
     (curr, prev) => {
       if (curr.interacting) {

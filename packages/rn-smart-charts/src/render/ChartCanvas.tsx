@@ -1,6 +1,6 @@
 import { Canvas, Group, Rect, rect } from '@shopify/react-native-skia';
 import type { SharedValue } from 'react-native-reanimated';
-import type { NormalizedOption, PlotMetrics } from '../types/internal';
+import type { NormalizedOption, NormalizedSeries, PlotMetrics } from '../types/internal';
 import { AreaPath } from './AreaPath';
 import { Crosshair } from './Crosshair';
 import { XAxis } from './XAxis';
@@ -42,20 +42,23 @@ export function ChartCanvas({
       <YAxis yAxis={option.yAxis} yMin={yMinAnim} yMax={yMaxAnim} plot={plot} />
 
       <Group clip={clipRect}>
-        <AreaPath
-          series={option.series}
-          xStart={xStart}
-          xEnd={xEnd}
-          yMin={yMinAnim}
-          yMax={yMaxAnim}
-          plot={plot}
-        />
+        {option.series.map((s, i) => (
+          <AreaPath
+            key={s.name ?? i}
+            series={s}
+            xStart={xStart}
+            xEnd={xEnd}
+            yMin={yMinAnim}
+            yMax={yMaxAnim}
+            plot={plot}
+          />
+        ))}
       </Group>
 
       <XAxis xAxis={option.xAxis} xStart={xStart} xEnd={xEnd} plot={plot} />
 
       <Crosshair
-        series={option.series}
+        series={option.series[0] as NormalizedSeries}
         tooltip={option.tooltip}
         active={crosshairActive}
         pixelX={crosshairX}

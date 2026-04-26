@@ -1,6 +1,6 @@
 {
   "name": "rn-smart-charts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React Native Skia chart library with TradingView-style pan/zoom and ECharts-inspired API.",
   "license": "MIT",
   "author": "Taha Okumus",
@@ -9,7 +9,13 @@
   "types": "lib/typescript/commonjs/index.d.ts",
   "react-native": "src/index.ts",
   "source": "src/index.ts",
-  "files": ["src", "lib", "!**/__tests__", "!**/*.test.ts", "!**/*.test.tsx"],
+  "files": [
+    "src",
+    "lib",
+    "!**/__tests__",
+    "!**/*.test.ts",
+    "!**/*.test.tsx"
+  ],
   "scripts": {
     "build": "bob build",
     "typecheck": "tsc --noEmit",
@@ -48,9 +54,24 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      ["commonjs", { "esm": true }],
-      ["module", { "esm": true }],
-      ["typescript", { "esm": true }]
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "esm": true
+        }
+      ]
     ]
   }
 }

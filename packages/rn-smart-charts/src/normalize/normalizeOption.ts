@@ -17,41 +17,53 @@ function dateToMs(v: number | Date | undefined): number | undefined {
 }
 
 export function normalizeOption(option: ChartOption): NormalizedOption {
-  const seriesIn = option.series[0];
-  if (!seriesIn) {
-    throw new Error('[rn-smart-charts] option.series must contain exactly one entry.');
+  if (!option.series || option.series.length === 0) {
+    throw new Error('[rn-smart-charts] option.series must contain at least one entry.');
   }
 
-  const { xs: rawXs, ys: rawYs } = normalizeData(seriesIn.data, option.xAxis);
+  const series: NormalizedSeries[] = option.series.map((seriesIn) => {
+    const { xs: rawXs, ys: rawYs } = normalizeData(seriesIn.data, option.xAxis);
 
-  // Optional LTTB downsampling.
-  const sampling = seriesIn.sampling ?? 'lttb';
-  const threshold = seriesIn.samplingThreshold ?? DEFAULT_LTTB_THRESHOLD;
-  let xs = rawXs;
-  let ys = rawYs;
-  if (sampling === 'lttb' && rawXs.length > threshold) {
-    const sampled = lttb(rawXs, rawYs, rawXs.length, threshold);
-    xs = sampled.xs;
-    ys = sampled.ys;
+    // Optional LTTB downsampling (per-series).
+    const sampling = seriesIn.sampling ?? 'lttb';
+    const threshold = seriesIn.samplingThreshold ?? DEFAULT_LTTB_THRESHOLD;
+    let xs = rawXs;
+    let ys = rawYs;
+    if (sampling === 'lttb' && rawXs.length > threshold) {
+      const sampled = lttb(rawXs, rawYs, rawXs.length, threshold);
+      xs = sampled.xs;
+      ys = sampled.ys;
+    }
+
+    const lineColor = seriesIn.lineStyle?.color ?? DEFAULT_LINE_COLOR;
+    return {
+      name: seriesIn.name,
+      xs,
+      ys,
+      rawXs,
+      rawYs,
+      smooth: seriesIn.smooth ?? false,
+      lineColor,
+      strokeWidth: seriesIn.lineStyle?.width ?? DEFAULT_LINE_WIDTH,
+      areaColor: seriesIn.areaStyle?.color ?? lineColor,
+      areaOpacity: seriesIn.areaStyle?.opacity ?? DEFAULT_AREA_OPACITY,
+    };
+  });
+
+  // Data extent — union across all series.
+  let dataMinX = Number.POSITIVE_INFINITY;
+  let dataMaxX = Number.NEGATIVE_INFINITY;
+  for (const s of series) {
+    if (s.rawXs.length === 0) continue;
+    const lo = s.rawXs[0] as number;
+    const hi = s.rawXs[s.rawXs.length - 1] as number;
+    if (lo < dataMinX) dataMinX = lo;
+    if (hi > dataMaxX) dataMaxX = hi;
   }
-
-  const lineColor = seriesIn.lineStyle?.color ?? DEFAULT_LINE_COLOR;
-  const series: NormalizedSeries = {
-    name: seriesIn.name,
-    xs,
-    ys,
-    rawXs,
-    rawYs,
-    smooth: seriesIn.smooth ?? false,
-    lineColor,
-    strokeWidth: seriesIn.lineStyle?.width ?? DEFAULT_LINE_WIDTH,
-    areaColor: seriesIn.areaStyle?.color ?? lineColor,
-    areaOpacity: seriesIn.areaStyle?.opacity ?? DEFAULT_AREA_OPACITY,
-  };
-
-  // Data extent
-  const dataMinX = rawXs.length > 0 ? (rawXs[0] as number) : 0;
-  const dataMaxX = rawXs.length > 0 ? (rawXs[rawXs.length - 1] as number) : 1;
+  if (!Number.isFinite(dataMinX) || !Number.isFinite(dataMaxX)) {
+    dataMinX = 0;
+    dataMaxX = 1;
+  }
 
   // Initial visible window
   const dzStart = dateToMs(option.dataZoom?.startValue);

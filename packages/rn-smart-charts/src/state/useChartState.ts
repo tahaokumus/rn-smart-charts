@@ -24,11 +24,20 @@ export interface ChartState {
 }
 
 export function useChartState(option: NormalizedOption): ChartState {
-  // Initial y domain over the initial visible window — so the chart looks
-  // correct on first paint, before any gesture-driven re-derivation.
+  // Initial y domain over the initial visible window — union across all series
+  // so the chart looks correct on first paint, before any gesture-driven re-derivation.
   const initialY = useMemo(() => {
-    const { i0, i1 } = indexRangeFor(option.series.xs, option.initialXStart, option.initialXEnd);
-    return yDomainFor(option.series.ys, i0, i1, option.yAxis.scale !== true);
+    const includeZero = option.yAxis.scale !== true;
+    let yMin = Number.POSITIVE_INFINITY;
+    let yMax = Number.NEGATIVE_INFINITY;
+    for (const s of option.series) {
+      const { i0, i1 } = indexRangeFor(s.xs, option.initialXStart, option.initialXEnd);
+      const d = yDomainFor(s.ys, i0, i1, includeZero);
+      if (d.yMin < yMin) yMin = d.yMin;
+      if (d.yMax > yMax) yMax = d.yMax;
+    }
+    if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) return { yMin: 0, yMax: 1 };
+    return { yMin, yMax };
   }, [option]);
 
   const xStart = useSharedValue(option.initialXStart);

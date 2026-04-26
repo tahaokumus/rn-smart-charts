@@ -98,7 +98,7 @@ export interface AnimationConfig {
 export interface ChartOption {
   xAxis: XAxis;
   yAxis?: YAxis;
-  series: [AreaSeries];
+  series: AreaSeries[];
   dataZoom?: DataZoom;
   tooltip?: Tooltip;
   grid?: Grid;

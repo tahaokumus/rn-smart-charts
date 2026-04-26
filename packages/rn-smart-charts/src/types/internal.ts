@@ -18,7 +18,7 @@ export interface NormalizedSeries {
 export interface NormalizedOption {
   xAxis: XAxis;
   yAxis: YAxis;
-  series: NormalizedSeries;
+  series: NormalizedSeries[];
   grid: Required<Grid>;
   animation: Required<AnimationConfig>;
   tooltip: Required<Pick<Tooltip, 'show'>> & Tooltip;
