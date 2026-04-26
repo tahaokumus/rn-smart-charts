@@ -34,20 +34,37 @@ function computeTicks(xAxis: XAxisOption, xStart: number, xEnd: number): TickEnt
   if (xEnd <= xStart) return [];
   if (xAxis.type === 'time') {
     const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
+    const values = tt.map((t) => t.value);
     // Contextual labels: show higher units only when they change.
     const contextualLabels = formatTimeTicksContextual(tt);
     return tt.map((t, i) => ({
       value: t.value,
       label: xAxis.axisLabel?.formatter
-        ? xAxis.axisLabel.formatter(t.value, i)
+        ? xAxis.axisLabel.formatter(t.value, i, values)
         : (contextualLabels[i] ?? ''),
     }));
+  }
+  if (xAxis.type === 'category') {
+    const n = xAxis.data?.length ?? 0;
+    const step = Math.max(1, Math.ceil(n / DEFAULT_X_TARGET_TICKS));
+    const indices: number[] = [];
+    for (let i = 0; i < n; i += step) indices.push(i);
+    return indices
+      .filter((i) => i >= xStart && i <= xEnd)
+      .map((i) => ({
+        value: i,
+        label: xAxis.axisLabel?.formatter
+          ? xAxis.axisLabel.formatter(i, i, indices)
+          : String(i),
+      }));
   }
   const lt = linearTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
   const step = lt.length > 1 ? (lt[1] as number) - (lt[0] as number) : 1;
   return lt.map((v, i) => ({
     value: v,
-    label: xAxis.axisLabel?.formatter ? xAxis.axisLabel.formatter(v, i) : formatNumberTick(v, step),
+    label: xAxis.axisLabel?.formatter
+      ? xAxis.axisLabel.formatter(v, i, lt as number[])
+      : formatNumberTick(v, step),
   }));
 }
 

@@ -34,7 +34,9 @@ function computeTicks(yAxis: YAxisOption, lo: number, hi: number): TickEntry[] {
   const step = lt.length > 1 ? (lt[1] as number) - (lt[0] as number) : 1;
   return lt.map((v, i) => ({
     value: v,
-    label: yAxis.axisLabel?.formatter ? yAxis.axisLabel.formatter(v, i) : formatNumberTick(v, step),
+    label: yAxis.axisLabel?.formatter
+      ? yAxis.axisLabel.formatter(v, i, lt as number[])
+      : formatNumberTick(v, step),
   }));
 }
 

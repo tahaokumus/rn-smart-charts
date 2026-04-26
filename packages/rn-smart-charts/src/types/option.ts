@@ -4,7 +4,7 @@ export interface AxisLabel {
   show?: boolean;
   color?: string;
   fontSize?: number;
-  formatter?: (value: number, index: number) => string;
+  formatter?: (value: number, index: number, ticks: number[]) => string;
 }
 
 export interface AxisLine {
