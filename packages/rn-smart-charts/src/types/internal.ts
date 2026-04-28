@@ -8,6 +8,8 @@ export interface NormalizedSeries {
   /** Raw, un-downsampled. Used for crosshair lookups so values stay accurate. */
   rawXs: Float64Array;
   rawYs: Float64Array;
+  /** Median consecutive x-delta of the raw input. Undefined for < 2 points. */
+  medianDeltaX?: number;
   smooth: boolean;
   lineColor: string;
   strokeWidth: number;
@@ -29,6 +31,11 @@ export interface NormalizedOption {
   minSpan: number;
   maxSpan: number;
   backgroundColor: string;
+  /**
+   * Resolved tick density floor in ms for the time x-axis.
+   * `xAxis.minInterval` if set, otherwise the smallest series `medianDeltaX`.
+   */
+  xAxisEffectiveMinInterval?: number;
 }
 
 export interface PlotMetrics {

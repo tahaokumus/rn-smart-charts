@@ -55,7 +55,13 @@ export function ChartCanvas({
         ))}
       </Group>
 
-      <XAxis xAxis={option.xAxis} xStart={xStart} xEnd={xEnd} plot={plot} />
+      <XAxis
+        xAxis={option.xAxis}
+        xStart={xStart}
+        xEnd={xEnd}
+        plot={plot}
+        minInterval={option.xAxisEffectiveMinInterval}
+      />
 
       <Crosshair
         series={option.series[0] as NormalizedSeries}

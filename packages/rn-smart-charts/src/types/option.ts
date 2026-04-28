@@ -21,6 +21,18 @@ export interface SplitLine {
 export interface XAxis {
   type: 'time' | 'value' | 'category';
   data?: Array<number | Date | string>;
+  /**
+   * Minimum gap between time-axis ticks in milliseconds. Caps tick density so
+   * labels don't appear at a finer resolution than the underlying data.
+   * If omitted, auto-detected from the median delta of consecutive x-values.
+   */
+  minInterval?: number;
+  /**
+   * BCP-47 locale tag (e.g. 'en-US', 'tr-TR', 'ja-JP') for time-axis month
+   * names. If omitted, the device's default locale is used. Falls back to
+   * English if the runtime lacks `Intl.DateTimeFormat`.
+   */
+  locale?: string;
   axisLabel?: AxisLabel;
   axisLine?: AxisLine;
   splitLine?: SplitLine;

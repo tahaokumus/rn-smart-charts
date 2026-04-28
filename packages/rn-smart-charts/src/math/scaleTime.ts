@@ -18,19 +18,29 @@ export interface TimeTick {
   level: TimeLevel;
 }
 
+export interface TimeTicksOptions {
+  /** Drop interval candidates whose step is finer than this (ms). */
+  minInterval?: number;
+}
+
 /**
  * Generate "nice" tick instants spanning [d0, d1] aiming for ~targetCount ticks.
  * The returned ticks are aligned to natural calendar boundaries (year start,
  * month start, midnight, hour, etc.) so labels read intuitively.
  */
-export function timeTicks(d0: number, d1: number, targetCount: number): TimeTick[] {
+export function timeTicks(
+  d0: number,
+  d1: number,
+  targetCount: number,
+  opts?: TimeTicksOptions,
+): TimeTick[] {
   if (d1 <= d0 || targetCount <= 0) return [];
   const span = d1 - d0;
   const target = Math.max(1, targetCount);
   const rough = span / target;
 
   // Pick the unit and step that produces the closest tick count to target.
-  const intervals: Array<{ level: TimeLevel; ms: number }> = [
+  const allIntervals: Array<{ level: TimeLevel; ms: number }> = [
     { level: 'second', ms: 1 * MS_SECOND },
     { level: 'second', ms: 5 * MS_SECOND },
     { level: 'second', ms: 15 * MS_SECOND },
@@ -53,7 +63,15 @@ export function timeTicks(d0: number, d1: number, targetCount: number): TimeTick
     { level: 'year', ms: 10 * MS_YEAR },
   ];
 
-  // intervals is a non-empty literal, so [0] is always defined.
+  // Apply the granularity floor: drop candidates strictly finer than minInterval.
+  // If everything was filtered out, keep the coarsest (largest) entry from the
+  // original list so we always produce something.
+  const minInterval = opts?.minInterval ?? 0;
+  let intervals = allIntervals.filter((it) => it.ms >= minInterval);
+  if (intervals.length === 0) {
+    intervals = [allIntervals[allIntervals.length - 1] as { level: TimeLevel; ms: number }];
+  }
+
   let chosen = intervals[0] as { level: TimeLevel; ms: number };
   let bestDelta = Math.abs(rough - chosen.ms);
   for (let i = 1; i < intervals.length; i++) {

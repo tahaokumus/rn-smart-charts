@@ -105,6 +105,42 @@ describe('timeTicks', () => {
       expect(t.value).toBeLessThanOrEqual(end);
     }
   });
+
+  it('honors minInterval = 1 day on a hourly-resolution span (no sub-day ticks)', () => {
+    // 7 days asking for many ticks would normally pick an hour-level step.
+    const start = new Date(2026, 0, 1).getTime();
+    const end = start + 7 * MS_DAY;
+    const ticks = timeTicks(start, end, 30, { minInterval: MS_DAY });
+    expect(ticks.length).toBeGreaterThan(0);
+    expect(ticks.every((t) => t.level !== 'hour' && t.level !== 'minute' && t.level !== 'second')).toBe(true);
+  });
+
+  it('honors minInterval = 1 hour on a fine span (no sub-hour ticks)', () => {
+    const start = new Date(2026, 0, 1, 0, 0, 0).getTime();
+    const end = start + 6 * MS_HOUR;
+    const ticks = timeTicks(start, end, 30, { minInterval: MS_HOUR });
+    expect(ticks.length).toBeGreaterThan(0);
+    expect(ticks.every((t) => t.level !== 'minute' && t.level !== 'second')).toBe(true);
+  });
+
+  it('falls back to coarsest interval when minInterval exceeds every candidate', () => {
+    // minInterval larger than the largest interval (10 years) should still
+    // yield ticks (the coarsest available).
+    const start = new Date(2026, 0, 1).getTime();
+    const end = new Date(2026, 0, 2).getTime();
+    const ticks = timeTicks(start, end, 6, { minInterval: 1000 * MS_YEAR });
+    // Doesn't crash, doesn't return finer-than-fallback ticks. Length may be 0
+    // (no aligned year-tick falls inside this 1-day span), which is acceptable.
+    expect(Array.isArray(ticks)).toBe(true);
+  });
+
+  it('minInterval = undefined behaves like the no-opts call', () => {
+    const start = new Date(2026, 0, 1).getTime();
+    const end = start + MS_DAY;
+    const a = timeTicks(start, end, 6);
+    const b = timeTicks(start, end, 6, { minInterval: undefined });
+    expect(a).toEqual(b);
+  });
 });
 
 // Silence unused warning: kept for documentation

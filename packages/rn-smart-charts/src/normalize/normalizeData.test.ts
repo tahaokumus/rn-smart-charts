@@ -70,4 +70,67 @@ describe('normalizeData', () => {
     const r = normalizeData([10, 20, 30], xAxis);
     expect(Array.from(r.xs)).toEqual([0, 1, 2]);
   });
+
+  describe('medianDeltaX', () => {
+    it('matches the median gap of regularly spaced data', () => {
+      const r = normalizeData(
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 1 },
+          { x: 200, y: 2 },
+          { x: 300, y: 3 },
+        ],
+        { type: 'value' },
+      );
+      expect(r.medianDeltaX).toBe(100);
+    });
+
+    it('picks the middle gap for irregular spacing', () => {
+      // Gaps: 50, 100, 200 → sorted [50, 100, 200] → median 100
+      const r = normalizeData(
+        [
+          { x: 0, y: 0 },
+          { x: 50, y: 1 },
+          { x: 150, y: 2 },
+          { x: 350, y: 3 },
+        ],
+        { type: 'value' },
+      );
+      expect(r.medianDeltaX).toBe(100);
+    });
+
+    it('averages two middle gaps for an even number of deltas', () => {
+      // 4 points → 3 gaps. To get an even number of gaps, use 5 points.
+      // Gaps: 10, 20, 30, 40 → median = (20+30)/2 = 25
+      const r = normalizeData(
+        [
+          { x: 0, y: 0 },
+          { x: 10, y: 1 },
+          { x: 30, y: 2 },
+          { x: 60, y: 3 },
+          { x: 100, y: 4 },
+        ],
+        { type: 'value' },
+      );
+      expect(r.medianDeltaX).toBe(25);
+    });
+
+    it('is undefined for fewer than 2 points', () => {
+      const empty = normalizeData([], { type: 'value' });
+      expect(empty.medianDeltaX).toBeUndefined();
+      const single = normalizeData([{ x: 1, y: 1 }], { type: 'value' });
+      expect(single.medianDeltaX).toBeUndefined();
+    });
+
+    it('is undefined when all points share the same x (no positive gaps)', () => {
+      const r = normalizeData(
+        [
+          { x: 5, y: 0 },
+          { x: 5, y: 1 },
+        ],
+        { type: 'value' },
+      );
+      expect(r.medianDeltaX).toBeUndefined();
+    });
+  });
 });

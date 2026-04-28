@@ -3,6 +3,8 @@ import type { DataPoint, XAxis } from '../types/option';
 export interface NormalizedData {
   xs: Float64Array;
   ys: Float64Array;
+  /** Median of consecutive x-deltas. Undefined when fewer than 2 points. */
+  medianDeltaX?: number;
 }
 
 /** Coerces a Date|number x-value to numeric ms (or numeric value). */
@@ -75,5 +77,21 @@ export function normalizeData(data: DataPoint[] | number[], xAxis: XAxis): Norma
     ys[i] = p[1];
   }
 
-  return { xs, ys };
+  const medianDeltaX = computeMedianDelta(xs);
+  return medianDeltaX === undefined ? { xs, ys } : { xs, ys, medianDeltaX };
+}
+
+function computeMedianDelta(xs: Float64Array): number | undefined {
+  if (xs.length < 2) return undefined;
+  const deltas: number[] = [];
+  for (let i = 1; i < xs.length; i++) {
+    const d = (xs[i] as number) - (xs[i - 1] as number);
+    if (d > 0) deltas.push(d);
+  }
+  if (deltas.length === 0) return undefined;
+  deltas.sort((a, b) => a - b);
+  const mid = deltas.length >> 1;
+  return deltas.length % 2 === 0
+    ? ((deltas[mid - 1] as number) + (deltas[mid] as number)) / 2
+    : (deltas[mid] as number);
 }

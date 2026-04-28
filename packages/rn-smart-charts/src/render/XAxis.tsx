@@ -1,5 +1,5 @@
 import { type SkFont, Text, matchFont } from '@shopify/react-native-skia';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   type SharedValue,
   runOnJS,
@@ -23,26 +23,36 @@ interface Props {
   xStart: SharedValue<number>;
   xEnd: SharedValue<number>;
   plot: PlotMetrics;
+  /** Resolved tick-density floor in ms (`xAxis.minInterval` or auto-detected). */
+  minInterval?: number;
 }
 
 interface TickEntry {
   value: number;
   label: string;
+  bold: boolean;
 }
 
-function computeTicks(xAxis: XAxisOption, xStart: number, xEnd: number): TickEntry[] {
+function computeTicks(
+  xAxis: XAxisOption,
+  xStart: number,
+  xEnd: number,
+  minInterval: number | undefined,
+): TickEntry[] {
   if (xEnd <= xStart) return [];
   if (xAxis.type === 'time') {
-    const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
+    const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS, { minInterval });
     const values = tt.map((t) => t.value);
-    // Contextual labels: show higher units only when they change.
-    const contextualLabels = formatTimeTicksContextual(tt);
-    return tt.map((t, i) => ({
-      value: t.value,
-      label: xAxis.axisLabel?.formatter
+    const contextual = formatTimeTicksContextual(tt, xAxis.locale);
+    return tt.map((t, i) => {
+      const c = contextual[i];
+      const fallback = c?.label ?? '';
+      const bold = c?.bold ?? false;
+      const label = xAxis.axisLabel?.formatter
         ? xAxis.axisLabel.formatter(t.value, i, values)
-        : (contextualLabels[i] ?? ''),
-    }));
+        : fallback;
+      return { value: t.value, label, bold };
+    });
   }
   if (xAxis.type === 'category') {
     const n = xAxis.data?.length ?? 0;
@@ -56,6 +66,7 @@ function computeTicks(xAxis: XAxisOption, xStart: number, xEnd: number): TickEnt
         label: xAxis.axisLabel?.formatter
           ? xAxis.axisLabel.formatter(i, i, indices)
           : String(i),
+        bold: false,
       }));
   }
   const lt = linearTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS);
@@ -65,23 +76,26 @@ function computeTicks(xAxis: XAxisOption, xStart: number, xEnd: number): TickEnt
     label: xAxis.axisLabel?.formatter
       ? xAxis.axisLabel.formatter(v, i, lt as number[])
       : formatNumberTick(v, step),
+    bold: false,
   }));
 }
 
-export function XAxis({ xAxis, xStart, xEnd, plot }: Props) {
+export function XAxis({ xAxis, xStart, xEnd, plot, minInterval }: Props) {
   const labelColor = xAxis.axisLabel?.color ?? DEFAULT_AXIS_LABEL_COLOR;
   const fontSize = xAxis.axisLabel?.fontSize ?? DEFAULT_AXIS_LABEL_FONT_SIZE;
   const showLabels = xAxis.axisLabel?.show !== false;
 
   const font = matchFont({ fontFamily: 'sans-serif', fontSize });
+  // Boundary ticks render in bold to match the ECharts time-axis look.
+  // matchFont accepts fontWeight; on platforms that ignore it, swap fontFamily
+  // to a -bold variant.
+  const boldFont = matchFont({ fontFamily: 'sans-serif', fontSize, fontWeight: 'bold' });
 
-  // Tick list as React state. Empty on first render to avoid reading .value during render;
-  // useEffect populates it on mount.
   const [tickList, setTickList] = useState<TickEntry[]>([]);
 
   // Wrapper invoked on the JS thread — `computeTicks` is not a worklet.
   const recomputeOnJS = (s: number, e: number) => {
-    setTickList(computeTicks(xAxis, s, e));
+    setTickList(computeTicks(xAxis, s, e, minInterval));
   };
 
   useAnimatedReaction(
@@ -92,15 +106,13 @@ export function XAxis({ xAxis, xStart, xEnd, plot }: Props) {
     },
   );
 
-  // Initial population + recompute when axis config changes. useEffect runs after render
-  // so reading shared-value `.value` here is safe.
   useEffect(() => {
-    setTickList(computeTicks(xAxis, xStart.value, xEnd.value));
-  }, [xAxis, xStart, xEnd]);
+    setTickList(computeTicks(xAxis, xStart.value, xEnd.value, minInterval));
+  }, [xAxis, xStart, xEnd, minInterval]);
 
-  if (!showLabels || !font) return null;
+  const yLabel = useMemo(() => plot.top + plot.height + fontSize + 4, [plot, fontSize]);
 
-  const yLabel = plot.top + plot.height + fontSize + 4;
+  if (!showLabels || !font || !boldFont) return null;
 
   return (
     <>
@@ -111,7 +123,7 @@ export function XAxis({ xAxis, xStart, xEnd, plot }: Props) {
           xStart={xStart}
           xEnd={xEnd}
           plot={plot}
-          font={font}
+          font={t.bold ? boldFont : font}
           color={labelColor}
           y={yLabel}
         />
