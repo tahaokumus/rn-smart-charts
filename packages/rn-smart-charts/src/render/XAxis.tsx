@@ -97,11 +97,14 @@ export function XAxis({ xAxis, xStart, xEnd, plot, minInterval }: Props) {
   const fontSize = xAxis.axisLabel?.fontSize ?? DEFAULT_AXIS_LABEL_FONT_SIZE;
   const showLabels = xAxis.axisLabel?.show !== false;
 
-  const font = matchFont({ fontFamily: 'sans-serif', fontSize });
   // Boundary ticks render in bold to match the ECharts time-axis look.
   // matchFont accepts fontWeight; on platforms that ignore it, swap fontFamily
   // to a -bold variant.
-  const boldFont = matchFont({ fontFamily: 'sans-serif', fontSize, fontWeight: 'bold' });
+  const font = useMemo(() => matchFont({ fontFamily: 'sans-serif', fontSize }), [fontSize]);
+  const boldFont = useMemo(
+    () => matchFont({ fontFamily: 'sans-serif', fontSize, fontWeight: 'bold' }),
+    [fontSize],
+  );
 
   const [tickList, setTickList] = useState<TickEntry[]>([]);
 
