@@ -141,6 +141,50 @@ describe('timeTicks', () => {
     const b = timeTicks(start, end, 6, { minInterval: undefined });
     expect(a).toEqual(b);
   });
+
+  it('honors maxInterval = 7 days on a year span (no month/year ticks)', () => {
+    // Without maxInterval, a 1-year span picks month-level ticks. Capping the
+    // step at 7 days forces day-level candidates only.
+    const start = new Date(2026, 0, 1).getTime();
+    const end = new Date(2027, 0, 1).getTime();
+    const ticks = timeTicks(start, end, 6, { maxInterval: 7 * MS_DAY });
+    expect(ticks.length).toBeGreaterThan(0);
+    // The chosen base level must be 'day'; 'month' ticks may still appear from
+    // the sub-month month-anchor injection — those are fine and expected.
+    const baseTicks = ticks.filter((t) => t.level !== 'month');
+    expect(baseTicks.length).toBeGreaterThan(0);
+    expect(baseTicks.every((t) => t.level === 'day')).toBe(true);
+  });
+
+  it('falls back to coarsest allowed interval when maxInterval is below every candidate', () => {
+    const start = new Date(2026, 0, 1).getTime();
+    const end = start + MS_DAY;
+    // 1ms ceiling drops every candidate; should not crash.
+    const ticks = timeTicks(start, end, 6, { maxInterval: 1 });
+    expect(Array.isArray(ticks)).toBe(true);
+  });
+
+  it('respects both minInterval and maxInterval simultaneously', () => {
+    // Window: [1 day, 7 days]. On a 1-year span this leaves only day-level
+    // candidates (1 day or 7 days), excluding month/year and sub-day.
+    const start = new Date(2026, 0, 1).getTime();
+    const end = new Date(2027, 0, 1).getTime();
+    const ticks = timeTicks(start, end, 30, {
+      minInterval: MS_DAY,
+      maxInterval: 7 * MS_DAY,
+    });
+    const baseTicks = ticks.filter((t) => t.level !== 'month');
+    expect(baseTicks.length).toBeGreaterThan(0);
+    expect(baseTicks.every((t) => t.level === 'day')).toBe(true);
+  });
+
+  it('maxInterval = undefined behaves like the no-opts call', () => {
+    const start = new Date(2026, 0, 1).getTime();
+    const end = start + MS_DAY;
+    const a = timeTicks(start, end, 6);
+    const b = timeTicks(start, end, 6, { maxInterval: undefined });
+    expect(a).toEqual(b);
+  });
 });
 
 // Silence unused warning: kept for documentation

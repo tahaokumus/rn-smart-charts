@@ -21,6 +21,8 @@ export interface TimeTick {
 export interface TimeTicksOptions {
   /** Drop interval candidates whose step is finer than this (ms). */
   minInterval?: number;
+  /** Drop interval candidates whose step is coarser than this (ms). */
+  maxInterval?: number;
 }
 
 /**
@@ -63,11 +65,14 @@ export function timeTicks(
     { level: 'year', ms: 10 * MS_YEAR },
   ];
 
-  // Apply the granularity floor: drop candidates strictly finer than minInterval.
+  // Apply granularity bounds: drop candidates outside [minInterval, maxInterval].
   // If everything was filtered out, keep the coarsest (largest) entry from the
   // original list so we always produce something.
   const minInterval = opts?.minInterval ?? 0;
-  let intervals = allIntervals.filter((it) => it.ms >= minInterval);
+  const maxInterval = opts?.maxInterval ?? Number.POSITIVE_INFINITY;
+  let intervals = allIntervals.filter(
+    (it) => it.ms >= minInterval && it.ms <= maxInterval,
+  );
   if (intervals.length === 0) {
     intervals = [allIntervals[allIntervals.length - 1] as { level: TimeLevel; ms: number }];
   }

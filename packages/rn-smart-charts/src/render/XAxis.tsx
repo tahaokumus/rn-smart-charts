@@ -41,7 +41,10 @@ function computeTicks(
 ): TickEntry[] {
   if (xEnd <= xStart) return [];
   if (xAxis.type === 'time') {
-    const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS, { minInterval });
+    const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS, {
+      minInterval,
+      maxInterval: xAxis.maxInterval,
+    });
     const values = tt.map((t) => t.value);
     const contextual = formatTimeTicksContextual(tt, xAxis.locale);
     return tt.map((t, i) => {

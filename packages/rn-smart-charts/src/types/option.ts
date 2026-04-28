@@ -28,6 +28,13 @@ export interface XAxis {
    */
   minInterval?: number;
   /**
+   * Maximum gap between time-axis ticks in milliseconds. Forces the chosen
+   * tick step to be no coarser than this — useful when sparse data would
+   * otherwise collapse to month/year-only ticks but you want intermediate
+   * day-level labels (the ECharts boundary-replacement style).
+   */
+  maxInterval?: number;
+  /**
    * BCP-47 locale tag (e.g. 'en-US', 'tr-TR', 'ja-JP') for time-axis month
    * names. If omitted, the device's default locale is used. Falls back to
    * English if the runtime lacks `Intl.DateTimeFormat`.
