@@ -14,7 +14,7 @@ import {
 import { formatNumberTick } from '../format/numberFormat';
 import { formatTimeTicksContextual } from '../format/timeTickFormat';
 import { ticks as linearTicks, scale } from '../math/scaleLinear';
-import { timeTicks } from '../math/scaleTime';
+import { selectTimeTicks } from '../math/scaleTime';
 import type { PlotMetrics } from '../types/internal';
 import type { XAxis as XAxisOption } from '../types/option';
 
@@ -33,17 +33,26 @@ interface TickEntry {
   bold: boolean;
 }
 
+const DEFAULT_LABEL_MIN_GAP_PX = 8;
+
 function computeTicks(
   xAxis: XAxisOption,
   xStart: number,
   xEnd: number,
+  plotWidthPx: number,
   minInterval: number | undefined,
+  measureLabel: (text: string, bold: boolean) => number,
 ): TickEntry[] {
   if (xEnd <= xStart) return [];
   if (xAxis.type === 'time') {
-    const tt = timeTicks(xStart, xEnd, DEFAULT_X_TARGET_TICKS, {
+    const tt = selectTimeTicks({
+      d0: xStart,
+      d1: xEnd,
+      plotWidthPx,
+      minLabelGapPx: xAxis.axisLabel?.minGap ?? DEFAULT_LABEL_MIN_GAP_PX,
+      measureLabel,
+      locale: xAxis.locale,
       minInterval,
-      maxInterval: xAxis.maxInterval,
     });
     const values = tt.map((t) => t.value);
     const contextual = formatTimeTicksContextual(tt, xAxis.locale);
@@ -98,7 +107,12 @@ export function XAxis({ xAxis, xStart, xEnd, plot, minInterval }: Props) {
 
   // Wrapper invoked on the JS thread — `computeTicks` is not a worklet.
   const recomputeOnJS = (s: number, e: number) => {
-    setTickList(computeTicks(xAxis, s, e, minInterval));
+    if (!font || !boldFont) return;
+    const measureLabel = (text: string, bold: boolean): number => {
+      const f = bold ? boldFont : font;
+      return f.measureText(text).width;
+    };
+    setTickList(computeTicks(xAxis, s, e, plot.width, minInterval, measureLabel));
   };
 
   useAnimatedReaction(
@@ -110,8 +124,15 @@ export function XAxis({ xAxis, xStart, xEnd, plot, minInterval }: Props) {
   );
 
   useEffect(() => {
-    setTickList(computeTicks(xAxis, xStart.value, xEnd.value, minInterval));
-  }, [xAxis, xStart, xEnd, minInterval]);
+    if (!font || !boldFont) return;
+    const measureLabel = (text: string, bold: boolean): number => {
+      const f = bold ? boldFont : font;
+      return f.measureText(text).width;
+    };
+    setTickList(
+      computeTicks(xAxis, xStart.value, xEnd.value, plot.width, minInterval, measureLabel),
+    );
+  }, [xAxis, xStart, xEnd, plot.width, minInterval, font, boldFont]);
 
   const yLabel = useMemo(() => plot.top + plot.height + fontSize + 4, [plot, fontSize]);
 

@@ -5,6 +5,11 @@ export interface AxisLabel {
   color?: string;
   fontSize?: number;
   formatter?: (value: number, index: number, ticks: number[]) => string;
+  /**
+   * Minimum pixel gap between adjacent labels for collision detection on
+   * width-aware time axes. Default 8.
+   */
+  minGap?: number;
 }
 
 export interface AxisLine {
@@ -27,13 +32,6 @@ export interface XAxis {
    * If omitted, auto-detected from the median delta of consecutive x-values.
    */
   minInterval?: number;
-  /**
-   * Maximum gap between time-axis ticks in milliseconds. Forces the chosen
-   * tick step to be no coarser than this — useful when sparse data would
-   * otherwise collapse to month/year-only ticks but you want intermediate
-   * day-level labels (the ECharts boundary-replacement style).
-   */
-  maxInterval?: number;
   /**
    * BCP-47 locale tag (e.g. 'en-US', 'tr-TR', 'ja-JP') for time-axis month
    * names. If omitted, the device's default locale is used. Falls back to
