@@ -36,6 +36,8 @@ export interface YAxis {
   min?: number | 'auto';
   max?: number | 'auto';
   scale?: boolean;
+  /** Symmetric padding as a fraction of the visible y-span. Default 0.03 (3%). */
+  padding?: number;
 }
 
 export interface AreaSeries {

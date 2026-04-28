@@ -51,6 +51,9 @@ export const Chart = forwardRef<ChartRef, ChartProps>(function Chart({ option, s
     yMaxAnim: state.yMaxAnim,
     interacting: state.interacting,
     includeZero: normalized.yAxis.scale !== true,
+    padRatio: normalized.yAxis.padding ?? 0.03,
+    yMinOverride: typeof normalized.yAxis.min === 'number' ? normalized.yAxis.min : null,
+    yMaxOverride: typeof normalized.yAxis.max === 'number' ? normalized.yAxis.max : null,
   });
 
   // Imperative API surface.

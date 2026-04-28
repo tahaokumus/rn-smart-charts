@@ -23,13 +23,14 @@ export function indexRangeFor(
 /**
  * Worklet-safe. Returns y min/max over xs[i0..i1] inclusive.
  * If `includeZero` is true, the range is extended to include 0.
- * Adds a small symmetric padding (3% of span) for visual breathing room.
+ * `padRatio` is a symmetric padding as a fraction of span (default 3%).
  */
 export function yDomainFor(
   ys: ArrayLike<number>,
   i0: number,
   i1: number,
   includeZero: boolean,
+  padRatio: number = 0.03,
 ): { yMin: number; yMax: number } {
   'worklet';
   if (i1 < i0) return { yMin: 0, yMax: 1 };
@@ -51,6 +52,6 @@ export function yDomainFor(
     return { yMin: mn - pad, yMax: mx + pad };
   }
   const span = mx - mn;
-  const pad = span * 0.03;
+  const pad = span * padRatio;
   return { yMin: mn - pad, yMax: mx + pad };
 }

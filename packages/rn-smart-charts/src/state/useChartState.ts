@@ -28,15 +28,23 @@ export function useChartState(option: NormalizedOption): ChartState {
   // so the chart looks correct on first paint, before any gesture-driven re-derivation.
   const initialY = useMemo(() => {
     const includeZero = option.yAxis.scale !== true;
+    const padRatio = option.yAxis.padding ?? 0.03;
+    const yMinOverride = typeof option.yAxis.min === 'number' ? option.yAxis.min : null;
+    const yMaxOverride = typeof option.yAxis.max === 'number' ? option.yAxis.max : null;
     let yMin = Number.POSITIVE_INFINITY;
     let yMax = Number.NEGATIVE_INFINITY;
     for (const s of option.series) {
       const { i0, i1 } = indexRangeFor(s.xs, option.initialXStart, option.initialXEnd);
-      const d = yDomainFor(s.ys, i0, i1, includeZero);
+      const d = yDomainFor(s.ys, i0, i1, includeZero, padRatio);
       if (d.yMin < yMin) yMin = d.yMin;
       if (d.yMax > yMax) yMax = d.yMax;
     }
-    if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) return { yMin: 0, yMax: 1 };
+    if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
+      yMin = 0;
+      yMax = 1;
+    }
+    if (yMinOverride !== null) yMin = yMinOverride;
+    if (yMaxOverride !== null) yMax = yMaxOverride;
     return { yMin, yMax };
   }, [option]);
 

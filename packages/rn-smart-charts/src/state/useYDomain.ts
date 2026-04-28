@@ -17,6 +17,12 @@ interface Args {
   /** True while a pan/pinch gesture is in flight — skip smoothing to avoid flicker. */
   interacting: SharedValue<boolean>;
   includeZero: boolean;
+  /** Symmetric padding as a fraction of span. Default 0.03 (3%). */
+  padRatio?: number;
+  /** Hard override for yMin. When non-null, replaces the data-derived value. */
+  yMinOverride?: number | null;
+  /** Hard override for yMax. When non-null, replaces the data-derived value. */
+  yMaxOverride?: number | null;
 }
 
 /**
@@ -38,6 +44,9 @@ export function useYDomain({
   yMaxAnim,
   interacting,
   includeZero,
+  padRatio = 0.03,
+  yMinOverride = null,
+  yMaxOverride = null,
 }: Args) {
   useAnimatedReaction(
     () => {
@@ -46,7 +55,7 @@ export function useYDomain({
       for (let s = 0; s < series.length; s++) {
         const sr = series[s] as NormalizedSeries;
         const { i0, i1 } = indexRangeFor(sr.xs, xStart.value, xEnd.value);
-        const d = yDomainFor(sr.ys, i0, i1, includeZero);
+        const d = yDomainFor(sr.ys, i0, i1, includeZero, padRatio);
         if (d.yMin < yMin) yMin = d.yMin;
         if (d.yMax > yMax) yMax = d.yMax;
       }
@@ -54,6 +63,8 @@ export function useYDomain({
         yMin = 0;
         yMax = 1;
       }
+      if (yMinOverride !== null) yMin = yMinOverride;
+      if (yMaxOverride !== null) yMax = yMaxOverride;
       return { yMin, yMax, interacting: interacting.value };
     },
     (curr, prev) => {
