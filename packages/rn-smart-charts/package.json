@@ -1,6 +1,6 @@
 {
   "name": "rn-smart-charts",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "React Native Skia chart library with TradingView-style pan/zoom and ECharts-inspired API.",
   "license": "MIT",
   "author": "Taha Okumus",
